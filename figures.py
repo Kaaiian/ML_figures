@@ -338,7 +338,7 @@ def element_prevalence(formulae, name='example', save_dir=None,
         plt.close()
 
     if not ptable_fig:
-        log_scale = True
+        log_scale = False
         fig, ax = plt.subplots(figsize=(15, 10))
         non_zero = elem_tracker[elem_tracker != 0].sort_values(ascending=False)
         if log_scale:
@@ -381,6 +381,7 @@ if __name__ == '__main__':
              save_dir='example_figures')
 
     act_pred(y_act, y_pred,
+             name='example_no_hist',
              save_dir='example_figures',
              x_hist=False, y_hist=False)
 
