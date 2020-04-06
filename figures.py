@@ -1,17 +1,24 @@
 import os
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.cm as cm
+
 from matplotlib.ticker import AutoMinorLocator
 from matplotlib.colors import Normalize
+
 from composition import _element_composition
 from scipy import stats
 
+plt.rcParams.update({'font.size': 14})
 
-def act_pred(y_act, y_pred, name='example', save_dir=None,
-             x_hist=True, y_hist=True):
+
+# %%
+def act_pred(y_act, y_pred, name='example',
+             x_hist=True, y_hist=True,
+             save_dir=None):
 
     mec = '#2F4F4F'
     mfc = '#C0C0C0'
@@ -49,8 +56,8 @@ def act_pred(y_act, y_pred, name='example', save_dir=None,
     ax2.plot([-10**9, 10**9], [-10**9, 10**9], 'k--', alpha=0.8,
              label='ideal')
 
-    ax2.set_ylabel('Predicted')
-    ax2.set_xlabel('Actual')
+    ax2.set_ylabel('Predicted value (Units)')
+    ax2.set_xlabel('Actual value (Units)')
     x_range = max(y_act) - min(y_act)
     ax2.set_xlim(max(y_act) - x_range*1.05,
                  min(y_act) + x_range*1.05)
@@ -84,13 +91,12 @@ def act_pred(y_act, y_pred, name='example', save_dir=None,
         fig_name = f'{save_dir}/{name}_act_pred.png'
         os.makedirs(save_dir, exist_ok=True)
         plt.savefig(fig_name, bbox_inches='tight', dpi=300)
-    # plt.show()
     plt.draw()
     plt.pause(0.001)
     plt.close()
 
 
-def residual_dist(y_act, y_pred, name='example', save_dir=None):
+def residual_hist(y_act, y_pred, name='example', save_dir=None):
 
     mec = '#2F4F4F'
     mfc = '#C0C0C0'
@@ -122,14 +128,13 @@ def residual_dist(y_act, y_pred, name='example', save_dir=None):
                     top=True)
 
     if save_dir is not None:
-        fig_name = f'{save_dir}/{name}_residual_dist.png'
+        fig_name = f'{save_dir}/{name}_residual_hist.png'
         os.makedirs(save_dir, exist_ok=True)
         plt.savefig(fig_name, bbox_inches='tight', dpi=300)
 
     plt.draw()
     plt.pause(0.001)
     plt.close()
-    pass
 
 
 def residual(y_act, y_pred, name='example', save_dir=None):
@@ -153,8 +158,8 @@ def residual(y_act, y_pred, name='example', save_dir=None):
             alpha=0.35, label=None, mew=1.2, ms=5.2)
     ax.plot([xmin, xmax], [0, 0], 'k--', alpha=0.7, label='ideal')
 
-    ax.set_xlabel(f'Actual')
-    ax.set_ylabel(f'Residual')
+    ax.set_ylabel('Residual error (Units)')
+    ax.set_xlabel('Actual value (Units)')
     ax.legend(loc='lower right')
 
     minor_locator_x = AutoMinorLocator(2)
@@ -179,7 +184,6 @@ def residual(y_act, y_pred, name='example', save_dir=None):
         fig_name = f'{save_dir}/{name}_residual.png'
         os.makedirs(save_dir, exist_ok=True)
         plt.savefig(fig_name, bbox_inches='tight', dpi=300)
-    # plt.show()
     plt.draw()
     plt.pause(0.001)
     plt.close()
@@ -201,9 +205,9 @@ def learning_curve(x_data, train_err, val_err, name='example', save_dir=None):
 
     max_val_err = max(val_err)
     ax.axhline(max_val_err, color='b', linestyle='--', alpha=0.3)
-    # ax.set_xlabel('Epochs')
-    ax.set_xlabel('Number of training data')
-    ax.set_ylabel(f'Error (Units)')
+
+    ax.set_xlabel('Number of training epochs')
+    ax.set_ylabel('Error (Units)')
     ax.set_ylim(0, 2 * np.mean(val_err))
 
     ax.legend(loc=1, framealpha=0.35, handlelength=1.5)
@@ -224,17 +228,16 @@ def learning_curve(x_data, train_err, val_err, name='example', save_dir=None):
                    length=4)
 
     if save_dir is not None:
-        fig_name = f'{save_dir}/{name}_residual.png'
+        fig_name = f'{save_dir}/{name}_learning_curve.png'
         os.makedirs(save_dir, exist_ok=True)
         plt.savefig(fig_name, bbox_inches='tight', dpi=300)
-    # plt.show()
     plt.draw()
     plt.pause(0.001)
     plt.close()
 
 
 def element_prevalence(formulae, name='example', save_dir=None,
-                       ptable_fig=True):
+                       log_scale=False, ptable_fig=True):
     ptable = pd.read_csv('element_properties/ptable.csv')
     ptable.index = ptable['symbol'].values
     elem_tracker = ptable['count']
@@ -247,7 +250,6 @@ def element_prevalence(formulae, name='example', save_dir=None,
         elem_tracker = elem_tracker.add(elem_count, fill_value=0)
 
     if ptable_fig:
-        log_scale = False
         fig, ax = plt.subplots(figsize=(n_column, n_row))
         rows = ptable['row']
         columns = ptable['column']
@@ -286,7 +288,7 @@ def element_prevalence(formulae, name='example', save_dir=None,
 
         granularity = 20
         for i in range(granularity):
-            value = int((i) * count_max/20)
+            value = int(round((i) * count_max/(granularity-1)))
             if log_scale:
                 if value != 0:
                     value = np.log(value)
@@ -308,7 +310,7 @@ def element_prevalence(formulae, name='example', save_dir=None,
             if i in [0, 4, 9, 14, 19]:
                 text = f'{value:0.0f}'
                 if log_scale:
-                    text = f'{np.exp(value):0.0e}'.replace('+', '')
+                    text = f'{np.exp(value):0.1e}'.replace('+', '')
                 plt.text(x_loc+width/2, y_offset-0.4, text,
                          horizontalalignment='center',
                          verticalalignment='center',
@@ -317,7 +319,8 @@ def element_prevalence(formulae, name='example', save_dir=None,
 
             ax.add_patch(rect)
 
-        plt.text(x_offset+length/2, y_offset+0.7, 'Element Count',
+        plt.text(x_offset+length/2, y_offset+0.7,
+                 'log(Element Count)' if log_scale else 'Element Count',
                  horizontalalignment='center',
                  verticalalignment='center',
                  fontweight='semibold',
@@ -338,8 +341,7 @@ def element_prevalence(formulae, name='example', save_dir=None,
         plt.close()
 
     if not ptable_fig:
-        log_scale = False
-        fig, ax = plt.subplots(figsize=(15, 10))
+        fig, ax = plt.subplots(figsize=(15, 8))
         non_zero = elem_tracker[elem_tracker != 0].sort_values(ascending=False)
         if log_scale:
             non_zero = np.log(non_zero)
@@ -348,9 +350,9 @@ def element_prevalence(formulae, name='example', save_dir=None,
         minor_locator_y = AutoMinorLocator(2)
         ax.get_yaxis().set_minor_locator(minor_locator_y)
 
-        ax.set_ylabel('Count')
+        ax.set_ylabel('Element Count')
         if log_scale:
-            ax.set_ylabel('log(Count)')
+            ax.set_ylabel('log(Element Count)')
 
         ax.tick_params(right=True,
                        top=True,
@@ -371,9 +373,9 @@ def element_prevalence(formulae, name='example', save_dir=None,
         plt.close()
 
 
+# %%
 if __name__ == '__main__':
-    import pandas as pd
-    # act vs pred data
+    # read in example act vs. pred data
     df_act_pred = pd.read_csv('example_data/act_pred.csv')
     y_act, y_pred = df_act_pred.iloc[:, 1], df_act_pred.iloc[:, 2]
 
@@ -382,17 +384,16 @@ if __name__ == '__main__':
 
     act_pred(y_act, y_pred,
              name='example_no_hist',
-             save_dir='example_figures',
-             x_hist=False, y_hist=False)
-
-    residual(y_act, y_pred,
-             name='res_fig2',
+             x_hist=False, y_hist=False,
              save_dir='example_figures')
 
-    residual_dist(y_act, y_pred,
+    residual(y_act, y_pred,
+             save_dir='example_figures')
+
+    residual_hist(y_act, y_pred,
                   save_dir='example_figures')
 
-    # learning curve data
+    # read in learning curve data
     df_lc = pd.read_csv('example_data/training_progress.csv')
     epoch = df_lc['epoch']
     train_err, val_err = df_lc['mae_train'], df_lc['mae_val']
@@ -402,5 +403,14 @@ if __name__ == '__main__':
 
     # element prevalence
     formula = df_act_pred.iloc[:, 0]
-    element_prevalence(formula, save_dir='example_figures')
-    element_prevalence(formula, save_dir='example_figures', ptable_fig=False)
+
+    element_prevalence(formula, save_dir='example_figures',
+                       log_scale=False)
+    element_prevalence(formula, save_dir='example_figures', name='example_log',
+                       log_scale=True)
+
+    plt.rcParams.update({'font.size': 12})
+    element_prevalence(formula, save_dir='example_figures',
+                       ptable_fig=False, log_scale=False)
+    element_prevalence(formula, save_dir='example_figures', name='example_log',
+                       ptable_fig=False, log_scale=True)
