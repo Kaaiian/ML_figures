@@ -16,8 +16,10 @@ plt.rcParams.update({'font.size': 14})
 
 
 # %%
-def act_pred(y_act, y_pred, name='example',
-             x_hist=True, y_hist=True,
+def act_pred(y_act, y_pred,
+             name='example',
+             x_hist=True,
+             y_hist=True,
              save_dir=None):
 
     mec = '#2F4F4F'
@@ -65,27 +67,39 @@ def act_pred(y_act, y_pred, name='example',
     ax2.set_ylim(max(y_act) - x_range*1.05,
                  min(y_act) + x_range*1.05)
 
+    ax1 = plt.axes(rect_histx)
+    ax1_n, ax1_bins, ax1_patches = ax1.hist(y_act,
+                                            bins=31,
+                                            density=True,
+                                            color=mfc,
+                                            edgecolor=mec,
+                                            alpha=0)
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+    ax1.set_xlim(ax2.get_xlim())
+    ax1.axis('off')
+
     if x_hist:
-        ax1 = plt.axes(rect_histx)
-        ax1.hist(y_act, bins=31, color='silver', edgecolor='k')
-        ax1.set_xticks([])
-        ax1.set_yticks([])
-        ax1.set_xlim(ax2.get_xlim())
-        ax1.axis('off')
+        [p.set_alpha(1.0) for p in ax1_patches]
+
+    ax3 = plt.axes(rect_histy)
+    ax3_n, ax3_bins, ax3_patches = ax3.hist(y_pred,
+                                            bins=31,
+                                            density=True,
+                                            color=mfc,
+                                            edgecolor=mec,
+                                            orientation='horizontal',
+                                            alpha=0)
+    ax3.set_xticks([])
+    ax3.set_yticks([])
+    ax3.set_ylim(ax2.get_ylim())
+    ax3.axis('off')
 
     if y_hist:
-        ax3 = plt.axes(rect_histy)
-        ax3.hist(y_pred,
-                 bins=31,
-                 color='silver',
-                 edgecolor='k',
-                 orientation='horizontal')
-        ax3.set_xticks([])
-        ax3.set_yticks([])
-        ax3.set_ylim(ax2.get_ylim())
-        ax3.axis('off')
+        [p.set_alpha(1.0) for p in ax3_patches]
 
     ax2.legend(loc=2, framealpha=0.35, handlelength=1.5)
+    plt.draw()
 
     if save_dir is not None:
         fig_name = f'{save_dir}/{name}_act_pred.png'
@@ -96,48 +110,9 @@ def act_pred(y_act, y_pred, name='example',
     plt.close()
 
 
-def residual_hist(y_act, y_pred, name='example', save_dir=None):
-
-    mec = '#2F4F4F'
-    mfc = '#C0C0C0'
-
-    fig, ax = plt.subplots(figsize=(4, 4))
-    y_err = y_pred - y_act
-    kde_act = stats.gaussian_kde(y_err)
-    x_range = np.linspace(min(y_err), max(y_err), 1000)
-
-    ax.hist(y_err, color=mfc, bins=35, alpha=1, edgecolor=mec, density=True)
-    ax.plot(x_range, kde_act(x_range), '-', lw=1, color=mec, label='kde')
-
-    ax.set_xlabel('Residual error (Units)')
-    plt.legend(loc=2, framealpha=0.35, handlelength=1.5)
-
-    ax.tick_params(direction='in',
-                   length=7,
-                   top=True,
-                   right=True)
-
-    minor_locator_x = AutoMinorLocator(2)
-    minor_locator_y = AutoMinorLocator(2)
-    ax.get_xaxis().set_minor_locator(minor_locator_x)
-    ax.get_yaxis().set_minor_locator(minor_locator_y)
-    plt.tick_params(which='minor',
-                    direction='in',
-                    length=4,
-                    right=True,
-                    top=True)
-
-    if save_dir is not None:
-        fig_name = f'{save_dir}/{name}_residual_hist.png'
-        os.makedirs(save_dir, exist_ok=True)
-        plt.savefig(fig_name, bbox_inches='tight', dpi=300)
-
-    plt.draw()
-    plt.pause(0.001)
-    plt.close()
-
-
-def residual(y_act, y_pred, name='example', save_dir=None):
+def residual(y_act, y_pred,
+             name='example',
+             save_dir=None):
 
     mec = '#2F4F4F'
     mfc = '#C0C0C0'
@@ -155,8 +130,8 @@ def residual(y_act, y_pred, name='example', save_dir=None):
     fig, ax = plt.subplots(figsize=(4, 4))
 
     ax.plot(y_act, y_err, 'o', mec=mec, mfc=mfc,
-            alpha=0.35, label=None, mew=1.2, ms=5.2)
-    ax.plot([xmin, xmax], [0, 0], 'k--', alpha=0.7, label='ideal')
+            alpha=0.5, label=None, mew=1.2, ms=5.2)
+    ax.plot([xmin, xmax], [0, 0], 'k--', alpha=0.8, label='ideal')
 
     ax.set_ylabel('Residual error (Units)')
     ax.set_xlabel('Actual value (Units)')
@@ -189,7 +164,53 @@ def residual(y_act, y_pred, name='example', save_dir=None):
     plt.close()
 
 
-def learning_curve(x_data, train_err, val_err, name='example', save_dir=None):
+def residual_hist(y_act, y_pred,
+                  name='example',
+                  save_dir=None):
+
+    mec = '#2F4F4F'
+    mfc = '#C0C0C0'
+
+    fig, ax = plt.subplots(figsize=(4, 4))
+    y_err = y_pred - y_act
+    kde_act = stats.gaussian_kde(y_err)
+    x_range = np.linspace(min(y_err), max(y_err), 1000)
+
+    ax.hist(y_err, color=mfc, bins=35, alpha=1, edgecolor=mec, density=True)
+    ax.plot(x_range, kde_act(x_range), '-', lw=1.2, color='k', label='kde')
+
+    ax.set_xlabel('Residual error (Units)')
+    plt.legend(loc=2, framealpha=0.35, handlelength=1.5)
+
+    ax.tick_params(direction='in',
+                   length=7,
+                   top=True,
+                   right=True)
+
+    minor_locator_x = AutoMinorLocator(2)
+    minor_locator_y = AutoMinorLocator(2)
+    ax.get_xaxis().set_minor_locator(minor_locator_x)
+    ax.get_yaxis().set_minor_locator(minor_locator_y)
+    plt.tick_params(which='minor',
+                    direction='in',
+                    length=4,
+                    right=True,
+                    top=True)
+
+    if save_dir is not None:
+        fig_name = f'{save_dir}/{name}_residual_hist.png'
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(fig_name, bbox_inches='tight', dpi=300)
+
+    plt.draw()
+    plt.pause(0.001)
+    plt.close()
+
+
+def learning_curve(x_data,
+                   train_err, val_err,
+                   name='example',
+                   save_dir=None):
 
     mec1 = '#2F4F4F'
     mfc1 = '#C0C0C0'
@@ -198,16 +219,16 @@ def learning_curve(x_data, train_err, val_err, name='example', save_dir=None):
 
     fig, ax = plt.subplots(figsize=(4, 4))
 
-    ax.plot(x_data, train_err, '-', color=mec1,
-            marker='o', mec=mec1, mfc=mfc1, ms=4, alpha=0.5, label='train_mae')
-    ax.plot(x_data, val_err, '--', color=mec2,
-            marker='s', mec=mec2, mfc=mfc2, ms=4, alpha=0.5, label='val_mae')
+    ax.plot(x_data, train_err, '-', color=mec1, marker='o',
+            mec=mec1, mfc=mfc1, ms=4, alpha=0.5, label='train')
+    ax.plot(x_data, val_err, '--', color=mec2, marker='s',
+            mec=mec2, mfc=mfc2, ms=4, alpha=0.5, label='validation')
 
     max_val_err = max(val_err)
     ax.axhline(max_val_err, color='b', linestyle='--', alpha=0.3)
 
     ax.set_xlabel('Number of training epochs')
-    ax.set_ylabel('Error (Units)')
+    ax.set_ylabel('Loss (Units)')
     ax.set_ylim(0, 2 * np.mean(val_err))
 
     ax.legend(loc=1, framealpha=0.35, handlelength=1.5)
@@ -236,8 +257,11 @@ def learning_curve(x_data, train_err, val_err, name='example', save_dir=None):
     plt.close()
 
 
-def element_prevalence(formulae, name='example', save_dir=None,
-                       log_scale=False, ptable_fig=True):
+def element_prevalence(formulae,
+                       name='example',
+                       save_dir=None,
+                       log_scale=False,
+                       ptable_fig=True):
     ptable = pd.read_csv('element_properties/ptable.csv')
     ptable.index = ptable['symbol'].values
     elem_tracker = ptable['count']
@@ -341,7 +365,7 @@ def element_prevalence(formulae, name='example', save_dir=None,
         plt.close()
 
     if not ptable_fig:
-        fig, ax = plt.subplots(figsize=(15, 8))
+        fig, ax = plt.subplots(figsize=(15, 6))
         non_zero = elem_tracker[elem_tracker != 0].sort_values(ascending=False)
         if log_scale:
             non_zero = np.log(non_zero)
