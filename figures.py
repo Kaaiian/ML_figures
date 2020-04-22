@@ -207,10 +207,10 @@ def residual_hist(y_act, y_pred,
     plt.close()
 
 
-def learning_curve(x_data,
-                   train_err, val_err,
-                   name='example',
-                   save_dir=None):
+def loss_curve(x_data,
+               train_err, val_err,
+               name='example',
+               save_dir=None):
 
     mec1 = '#2F4F4F'
     mfc1 = '#C0C0C0'
@@ -249,7 +249,7 @@ def learning_curve(x_data,
                    length=4)
 
     if save_dir is not None:
-        fig_name = f'{save_dir}/{name}_learning_curve.png'
+        fig_name = f'{save_dir}/{name}_loss_curve.png'
         os.makedirs(save_dir, exist_ok=True)
         plt.savefig(fig_name, bbox_inches='tight', dpi=300)
     plt.draw()
@@ -417,13 +417,13 @@ if __name__ == '__main__':
     residual_hist(y_act, y_pred,
                   save_dir='example_figures')
 
-    # read in learning curve data
+    # read in loss curve data
     df_lc = pd.read_csv('example_data/training_progress.csv')
     epoch = df_lc['epoch']
     train_err, val_err = df_lc['mae_train'], df_lc['mae_val']
 
-    learning_curve(epoch, train_err, val_err,
-                   save_dir='example_figures')
+    loss_curve(epoch, train_err, val_err,
+               save_dir='example_figures')
 
     # element prevalence
     formula = df_act_pred.iloc[:, 0]
