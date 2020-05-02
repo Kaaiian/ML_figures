@@ -20,6 +20,7 @@ def act_pred(y_act, y_pred,
              name='example',
              x_hist=True,
              y_hist=True,
+             reg_line=True,
              save_dir=None):
 
     mec = '#2F4F4F'
@@ -97,6 +98,11 @@ def act_pred(y_act, y_pred,
 
     if y_hist:
         [p.set_alpha(1.0) for p in ax3_patches]
+
+    if reg_line:
+        polyfit = np.polyfit(y_act, y_pred, deg=1)
+        reg_ys = np.poly1d(polyfit)(np.unique(y_act))
+        ax2.plot(np.unique(y_act), reg_ys, alpha=0.8, label='linear fit')
 
     ax2.legend(loc=2, framealpha=0.35, handlelength=1.5)
     plt.draw()
@@ -404,11 +410,13 @@ if __name__ == '__main__':
     y_act, y_pred = df_act_pred.iloc[:, 1], df_act_pred.iloc[:, 2]
 
     act_pred(y_act, y_pred,
+             reg_line=True,
              save_dir='example_figures')
 
     act_pred(y_act, y_pred,
              name='example_no_hist',
              x_hist=False, y_hist=False,
+             reg_line=True,
              save_dir='example_figures')
 
     residual(y_act, y_pred,
